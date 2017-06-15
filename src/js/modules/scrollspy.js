@@ -2,10 +2,14 @@ function ScrollSpy (wrapper, opt) {
 
   this.doc = document;
   this.wrapper = (typeof wrapper === 'string') ? this.doc.querySelector(wrapper) : wrapper;
-  this.nav = this.wrapper.querySelectorAll(opt.nav);
+  this.nav = this.doc.querySelectorAll(opt.nav);
+  this.win = window;
+
+  this.containingElement = opt.container ? document.getElementById(opt.container) : this.win;
+  // distance from top of window to `this.containingElement`
+  this.offset = opt.offset;
 
   this.contents = [];
-  this.win = window;
 
   this.winH = this.win.innerHeight;
 
@@ -26,7 +30,9 @@ ScrollSpy.prototype.getContents = function () {
 
   for (var i = 0, max = this.nav.length; i < max; i++) {
     var href = this.nav[i].href;
-
+    if (!href) {
+      continue;
+    }
     targetList.push(this.doc.getElementById(href.split('#')[1]));
   }
 
@@ -34,14 +40,15 @@ ScrollSpy.prototype.getContents = function () {
 };
 
 ScrollSpy.prototype.attachEvent = function () {
-  this.win.addEventListener('load', (function () {
+
+  this.containingElement.addEventListener('load', (function () {
     this.spy(this.callback);
   }).bind(this));
 
 
   var scrollingTimer;
 
-  this.win.addEventListener('scroll', (function () {
+  this.containingElement.addEventListener('scroll', (function () {
     if (scrollingTimer) {
       clearTimeout(scrollingTimer);
     }
@@ -85,8 +92,12 @@ ScrollSpy.prototype.getElemsViewState = function () {
     viewStatusList = [];
 
   for (var i = 0, max = this.contents.length; i < max; i++) {
-    var currentContent = this.contents[i],
-      isInView = this.isInView(currentContent);
+    var currentContent = this.contents[i];
+    if (!currentContent) {
+      continue;
+    }
+
+    var isInView = this.isInView(currentContent);
 
     if (isInView) {
       elemsInView.push(currentContent);
@@ -105,10 +116,10 @@ ScrollSpy.prototype.getElemsViewState = function () {
 
 ScrollSpy.prototype.isInView = function (el) {
   var winH = this.winH,
-    scrollTop = this.doc.documentElement.scrollTop || this.doc.body.scrollTop,
+    scrollTop = this.containingElement.scrollTop,
     scrollBottom = scrollTop + winH,
     rect = el.getBoundingClientRect(),
-    elTop = rect.top + scrollTop,
+    elTop = rect.top + scrollTop - this.offset,
     elBottom = elTop + el.offsetHeight;
 
   return (elTop < scrollBottom) && (elBottom > scrollTop);
