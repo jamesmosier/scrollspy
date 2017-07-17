@@ -126,14 +126,12 @@ ScrollSpy.prototype.isInView = function (el) {
 };
 
 ScrollSpy.prototype.markNav = function (elems) {
-  var navItems = this.nav,
-    isAlreadyMarked = false;
+  var navItems = this.nav;
 
   for (var i = 0, max = navItems.length; i < max; i++) {
-    if (elems.viewStatusList[i] && !isAlreadyMarked) {
-      isAlreadyMarked = true;
+    if (elems.viewStatusList[i]) {
       navItems[i].classList.add(this.className);
-    } else {
+    } else if(!elems.viewStatusList[i]) {
       navItems[i].classList.remove(this.className);
     }
   }
